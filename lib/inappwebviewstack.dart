@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:one_klass/components/databaseCache.dart';
 
 class MyInApp extends StatefulWidget {
   @override
@@ -52,12 +53,20 @@ class _MyInAppState extends State<MyInApp> {
     }
   }
 
-  // void copy(List<dynamic> params) {
-  //   Clipboard.setData(ClipboardData(text: params[0]));
-  // }
-  void copy() {
-    Clipboard.setData(const ClipboardData(text: 'AYOMIDE'));
+  bool copy(List<dynamic> params) {
+    Clipboard.setData(ClipboardData(text: params[0]));
+    return true;
   }
+
+  _loadCache() async {
+    List<Cache> cache = await DatabaseCache().getItems();
+
+    return cache;
+  }
+
+  // void copy() {
+  //   Clipboard.setData(const ClipboardData(text: 'AYOMIDE'));
+  // }
 
   // Future<void> downloadFile(String url, [String? filename]) async {
   //   var hasStoragePermission = await Permission.storage.isGranted;
@@ -78,7 +87,7 @@ class _MyInAppState extends State<MyInApp> {
 
   @override
   void initState() {
-    copy();
+    // copy();
     requestCameraPermission();
     super.initState();
     // IsolateNameServer.registerPortWithName(
@@ -116,6 +125,23 @@ class _MyInAppState extends State<MyInApp> {
           );
   }
 
+  // void handleClick(int item) async {
+  //   switch (item) {
+  //     case 0:
+  //       await webViewController?.loadUrl(
+  //           urlRequest: URLRequest(
+  //               url: Uri.parse(
+  //                   "https://c.ndtvimg.com/2019-06/1d5dqf78_missile-generic-rocket-generic_625x300_05_June_19.jpg")));
+  //       break;
+  //     case 1:
+  //       await webViewController?.loadUrl(
+  //           urlRequest: URLRequest(
+  //               url: Uri.parse(
+  //                   "https://c.ndtvimg.com/2019-06/1d5dqf78_missile-generic-rocket-generic_625x300_05_June_19.jpg")));
+  //       break;
+  //   }
+  // }
+
   // @override
   // void dispose() {
   //   IsolateNameServer.removePortNameMapping('downloader_send_port');
@@ -129,22 +155,6 @@ class _MyInAppState extends State<MyInApp> {
   //       IsolateNameServer.lookupPortByName('downloader_send_port');
   //   send?.send([id, status, progress]);
   // }
-  void handleClick(int item) async {
-    switch (item) {
-      case 0:
-        await webViewController?.loadUrl(
-            urlRequest: URLRequest(
-                url: Uri.parse(
-                    "https://www.ceenaija.com/wp-content/uploads/music/2021/01/Dunsin_Oyekan_-_YAH_CeeNaija.com_.mp3")));
-        break;
-      case 1:
-        await webViewController?.loadUrl(
-            urlRequest: URLRequest(
-                url: Uri.parse(
-                    "https://files.ceenaija.com/wp-content/uploads/music/2022/07/Christian_Hymn_-_Higher_Ground_CeeNaija.com_.mp3")));
-        break;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,93 +162,122 @@ class _MyInAppState extends State<MyInApp> {
       onWillPop: () => _goBack(),
       child: SafeArea(
         child: Scaffold(
-            appBar: AppBar(
-              title: const Text("InAppWebView Download"),
-              actions: [
-                PopupMenuButton<int>(
-                  onSelected: (item) => handleClick(item),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem<int>(
-                        value: 0, child: Text('Download file 1')),
-                    const PopupMenuItem<int>(
-                        value: 1, child: Text('Download file 2')),
-                  ],
-                ),
-              ],
-            ),
+            // appBar: AppBar(
+            //   title: const Text("InAppWebView Download"),
+            //   actions: [
+            //     PopupMenuButton<int>(
+            //       onSelected: (item) => handleClick(item),
+            //       itemBuilder: (context) => [
+            //         const PopupMenuItem<int>(
+            //             value: 0, child: Text('Download file 1')),
+            //         const PopupMenuItem<int>(
+            //             value: 1, child: Text('Download file 2')),
+            //       ],
+            //     ),
+            //   ],
+            // ),
             body: Stack(children: <Widget>[
-              InAppWebView(
-                androidOnPermissionRequest: (InAppWebViewController controller,
-                    String origin, List<String> resources) async {
-                  return PermissionRequestResponse(
-                      resources: resources,
-                      action: PermissionRequestResponseAction.GRANT);
+          InAppWebView(
+            androidOnPermissionRequest: (InAppWebViewController controller,
+                String origin, List<String> resources) async {
+              return PermissionRequestResponse(
+                  resources: resources,
+                  action: PermissionRequestResponseAction.GRANT);
+            },
+            onLoadStop: (controller, url) {
+              pullToRefreshController?.endRefreshing();
+
+              // controller.evaluateJavascript(
+              //     source:
+              //         'javascript:navigator.clipboard.writeText = (msg) => { return window.flutter_inappwebview?.callHandler("axs-wallet-copy-clipboard", msg); }');
+              // controller.addJavaScriptHandler(
+              //   handlerName: 'axs-wallet-copy-clipboard',
+              //   callback: (args) {
+              //     copy(args);
+              //   },
+              // );
+            },
+            initialOptions: InAppWebViewGroupOptions(
+              crossPlatform: InAppWebViewOptions(
+                  mediaPlaybackRequiresUserGesture: false,
+                  useOnDownloadStart: true,
+                  javaScriptEnabled: true,
+                  disableVerticalScroll: false,
+                  disableHorizontalScroll: false),
+            ),
+            onDownloadStartRequest: (controller, url) async {
+              Directory? tempDir = await getExternalStorageDirectory();
+              setState(() {});
+              print("onDownloadStart $url");
+              await FlutterDownloader.enqueue(
+                url: url.url.toString(),
+                savedDir: tempDir!.path,
+                showNotification: true,
+                fileName: 'testing',
+                // url.suggestedFilename,
+                saveInPublicStorage: true,
+                // show download progress in status bar (for Android)
+                openFileFromNotification:
+                    true, // click on notification to open downloaded file (for Android)
+              );
+            },
+            onLoadError: (controller, url, i, s) {
+              webViewController!
+                  .loadFile(assetFilePath: "assets/static/not_found.html");
+            },
+            onLoadHttpError: (controller, url, i, s) {
+              webViewController!
+                  .loadFile(assetFilePath: "assets/static/not_found.html");
+            },
+            key: webViewKey,
+            initialUrlRequest:
+                URLRequest(url: Uri.parse('https://oneklass.oauife.edu.ng')),
+            pullToRefreshController: pullToRefreshController,
+            onWebViewCreated: (controller) {
+              webViewController = controller;
+              controller.addJavaScriptHandler(
+                handlerName: 'clipboardManager',
+                callback: (args) {
+                  return copy(args);
                 },
-                onLoadStop: (controller, url) {
-                  pullToRefreshController?.endRefreshing();
+              );
+              controller.addJavaScriptHandler(
+                handlerName: 'writeCache',
+                callback: (args) async {
+                  await DatabaseCache.insertData(args[0], args[1]);
                 },
-                initialOptions: InAppWebViewGroupOptions(
-                  crossPlatform: InAppWebViewOptions(
-                      mediaPlaybackRequiresUserGesture: false,
-                      useOnDownloadStart: true,
-                      javaScriptEnabled: true,
-                      disableVerticalScroll: false,
-                      disableHorizontalScroll: false),
-                ),
-                onDownloadStartRequest: (controller, url) async {
-                  Directory? tempDir = await getExternalStorageDirectory();
-                  setState(() {});
-                  print("onDownloadStart $url");
-                  await FlutterDownloader.enqueue(
-                    url: url.url.toString(),
-                    savedDir: tempDir!.path,
-                    showNotification: true,
-                    fileName: url.suggestedFilename,
-                    saveInPublicStorage: true,
-                    // show download progress in status bar (for Android)
-                    openFileFromNotification:
-                        true, // click on notification to open downloaded file (for Android)
-                  );
+              );
+              controller.addJavaScriptHandler(
+                handlerName: 'fetchCache',
+                callback: (args) async {
+                  _loadCache();
                 },
-                onLoadError: (controller, url, i, s) {
-                  webViewController!
-                      .loadFile(assetFilePath: "assets/static/not_found.html");
-                },
-                onLoadHttpError: (controller, url, i, s) {
-                  webViewController!
-                      .loadFile(assetFilePath: "assets/static/not_found.html");
-                },
-                key: webViewKey,
-                initialUrlRequest: URLRequest(
-                    url: Uri.parse('https://oneklass.oauife.edu.ng')),
-                pullToRefreshController: pullToRefreshController,
-                onWebViewCreated: (controller) {
-                  webViewController = controller;
-                  //
-                  // (controller, navigationAction) async {
-                  //   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-                  //     final shouldPerformDownload =
-                  //         navigationAction.shouldPerformDownload ?? false;
-                  //     final url = navigationAction.request.url;
-                  //     if (shouldPerformDownload && url != null) {
-                  //       await downloadFile(url.toString());
-                  //       return NavigationActionPolicy.ALLOW;
-                  //     }
-                  //   }
-                  //   return NavigationActionPolicy.ALLOW;
-                  // };
-                  // onDownloadStartRequest: (controller, downloadStartRequest) async {
-                  // await downloadFile(downloadStartRequest.url.toString(),
-                  // downloadStartRequest.suggestedFilename);
-                  // };
-                },
-                onProgressChanged: (controller, progress) {
-                  if (progress == 100) {
-                    pullToRefreshController?.endRefreshing();
-                  }
-                },
-              ),
-            ])),
+              );
+              //
+              // (controller, navigationAction) async {
+              //   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+              //     final shouldPerformDownload =
+              //         navigationAction.shouldPerformDownload ?? false;
+              //     final url = navigationAction.request.url;
+              //     if (shouldPerformDownload && url != null) {
+              //       await downloadFile(url.toString());
+              //       return NavigationActionPolicy.ALLOW;
+              //     }
+              //   }
+              //   return NavigationActionPolicy.ALLOW;
+              // };
+              // onDownloadStartRequest: (controller, downloadStartRequest) async {
+              // await downloadFile(downloadStartRequest.url.toString(),
+              // downloadStartRequest.suggestedFilename);
+              // };
+            },
+            onProgressChanged: (controller, progress) {
+              if (progress == 100) {
+                pullToRefreshController?.endRefreshing();
+              }
+            },
+          ),
+        ])),
       ),
     );
   }

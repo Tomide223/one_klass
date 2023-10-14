@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:one_klass/components/database.dart';
+import 'package:one_klass/components/databaseCache.dart';
 
 class InAppLocal extends StatefulWidget {
   InAppLocal({super.key});
@@ -11,33 +13,22 @@ class InAppLocal extends StatefulWidget {
 
 class _InAppLocalState extends State<InAppLocal> {
   final GlobalKey webViewKey = GlobalKey();
-  InAppWebViewController? webViewController;
+  late InAppWebViewController webViewController;
 
   PullToRefreshController? pullToRefreshController;
 
   bool pullToRefreshEnabled = true;
 
   Future<bool> _goBack() async {
-    var value = await webViewController?.canGoBack();
-    if (value != null) {
-      webViewController?.goBack();
+    var value = await webViewController.canGoBack();
+    if (value) {
+      webViewController.goBack();
       return false;
     } else {
       return true;
     }
   }
 
-//   onLoadStop: (controller, url) {
-//   controller.evaluateJavascript(
-//   source:
-//   'javascript:navigator.clipboard.writeText = (msg) => { return window.flutter_inappwebview?.callHandler("axs-wallet-copy-clipboard", msg); }');
-//   controller.addJavaScriptHandler(
-//   handlerName: 'axs-wallet-copy-clipboard',
-//   callback: (args) {
-//   copy(args);
-//   },
-//   );
-// },
   Future<void> requestCameraPermission() async {
     final status = await Permission.camera.request();
     final foot = await Permission.storage.request();
@@ -52,6 +43,18 @@ class _InAppLocalState extends State<InAppLocal> {
         foot == PermissionStatus.permanentlyDenied) {
       // Permission permanently denied.
     }
+  }
+
+  _loadData() async {
+    List<Item> items = await DatabaseHelper().getItems();
+
+    return items;
+  }
+
+  _loadCache() async {
+    List<Cache> cache = await DatabaseCache().getItems();
+
+    return cache;
   }
 
   @override
@@ -87,6 +90,36 @@ class _InAppLocalState extends State<InAppLocal> {
                 },
                 onWebViewCreated: (controller) async {
                   webViewController = controller;
+                  controller.addJavaScriptHandler(
+                    handlerName: 'writeUploadAbles',
+                    callback: (args) async {
+                      await DatabaseHelper.insertData(args[0], args[1]);
+                    },
+                  );
+                  controller.addJavaScriptHandler(
+                    handlerName: 'fetchUploadAbles',
+                    callback: (args) async {
+                      _loadData();
+                    },
+                  );
+                  controller.addJavaScriptHandler(
+                    handlerName: 'writeCache',
+                    callback: (args) async {
+                      await DatabaseCache.insertData(args[0], args[1]);
+                    },
+                  );
+                  controller.addJavaScriptHandler(
+                    handlerName: 'updateCache',
+                    callback: (args) async {
+                      await DatabaseCache.updateItem(args[0], args[1]);
+                    },
+                  );
+                  controller.addJavaScriptHandler(
+                    handlerName: 'fetchCache',
+                    callback: (args) async {
+                      _loadCache();
+                    },
+                  );
                 },
                 onLoadStart: (controller, url) {},
                 onLoadStop: (controller, url) {},

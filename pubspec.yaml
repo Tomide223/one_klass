@@ -38,12 +38,11 @@ dependencies:
   cupertino_icons: ^1.0.2
   webview_flutter: ^4.4.1
   connectivity_plus: ^4.0.2
-  rflutter_alert: ^2.0.7
-  animated_text_kit: ^4.2.1
+
+
   modal_progress_hud_nsn: ^0.4.0
   permission_handler: ^11.0.1
-  shelf: ^1.4.1
-  shelf_cors_headers: ^0.1.5
+
   file_picker: ^5.5.0
   android_path_provider: ^0.3.0
   flutter_downloader: ^1.11.3
@@ -51,6 +50,7 @@ dependencies:
   shelf_static: ^1.1.2
   path: ^1.8.3
   flutter_inappwebview: ^5.8.0
+  sqflite: ^2.0.0
 
 
 
@@ -90,10 +90,12 @@ flutter:
     - assets/static/locals/general/script/generalscript.js
     - assets/static/locals/builds/attendance/TakeAttendance.js
     - assets/static/locals/recognition/face-api.min.js
+    - assets/static/locals/recognition/models/tiny_face_detector_model-weights_manifest.json
     - assets/static/locals/splash/style.css
     - assets/static/locals/splash/images/oaulogo.jpg
     - assets/static/locals/splash/images/oneklass.png
     - assets/static/locals/general/images/not_found.png
+    - assets/static/locals/recognition/models/tiny_face_detector_model-shard1
 
 
   #   - images/a_dot_ham.jpeg
