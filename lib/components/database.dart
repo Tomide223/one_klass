@@ -1,80 +1,94 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
-class Item {
-  int id;
-  String type;
-  String packet;
+class Attendance {
+  final int? id;
+  final String type;
+  final String packet;
 
-  Item({required this.id, required this.type, required this.packet});
+  const Attendance({required this.type, required this.packet, this.id});
+
+  factory Attendance.fromJson(Map<String, dynamic> json) =>
+      Attendance(id: json['id'], type: json['type'], packet: json['packet']);
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type,
+        'packet': packet,
+      };
 }
 
-class DatabaseHelper {
-  static Database? _uploadAbles;
+class DatabaseAttendance {
+  static const int _version = 1;
+  static const String _dbname = 'Attendance.db';
 
-  // Create and open the database.
-  static Future<Database> _openDatabase() async {
-    if (_uploadAbles == null) {
-      String dbPath = await getDatabasesPath();
-      String path = join(dbPath, 'my_database.db');
-
-      _uploadAbles = await openDatabase(path, version: 1, onCreate: _onCreate);
-    }
-    return _uploadAbles!;
+  static Future<Database> _getDB() async {
+    return openDatabase(join(await getDatabasesPath(), _dbname),
+        onCreate: (db, version) async => await db.execute(
+              "CREATE TABLE Attend_table (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, packet TEXT NOT NULL)",
+            ),
+        version: _version);
   }
 
-  // Create the database table.
-  static Future<void> _onCreate(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE my_table (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT,
-        packet TEXT,
-      )
-    ''');
+  static Future<int> addAttendance(Attendance attendance) async {
+    final db = await _getDB();
+    return await db.insert('Attend_table', attendance.toJson(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  // Insert data into the database.
-  static Future<int> insertData(String type, String packet) async {
-    Database db = await _openDatabase();
-    Map<String, dynamic> row = {
-      'type': type,
-      'packet': packet,
-    };
-    return await db.insert('my_table', row);
+  static Future<int> updateAttendance(Attendance cache) async {
+    final db = await _getDB();
+    return await db.update('Attend_table', cache.toJson(),
+        where: 'id = ?',
+        whereArgs: [cache.id],
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<void> deleteItem(int id) async {
-    Database db = await _openDatabase();
-    await db.delete(
-      'my_table',
-      where: null,
+  static Future<int> deleteAttendance(Attendance cache) async {
+    final db = await _getDB();
+    return await db.delete(
+      'Attend_table',
+      where: 'id = ?',
+      whereArgs: [cache.id],
     );
   }
 
-  Future<List<Item>> getItems() async {
-    Database db = await _openDatabase();
-    List<Map<String, dynamic>> items = await db.query('my_table');
-    return items
-        .map((item) =>
-            Item(id: item['id'], type: item['type'], packet: item['packet']))
-        .toList();
+  static Future<List<Attendance>?> getAllAttendance() async {
+    final db = await _getDB();
+    final List<Map<String, dynamic>> maps = await db.query('Attend_table');
+
+    if (maps.isEmpty) {
+      print(maps);
+      return null;
+    }
+    print(maps);
+    return List.generate(
+        maps.length, (index) => Attendance.fromJson(maps[index]));
   }
 
-  // Query all data from the database.
-  static Future<List<Map<String, dynamic>>> queryAllData() async {
-    Database db = await _openDatabase();
-    return await db.query('my_table');
+  static Future<List<Attendance>?> getAttendance() async {
+    final db = await _getDB();
+    final List<Map<String, dynamic>> maps = await db
+        .query("Attend_table", where: 'type =?', whereArgs: ['attendance']);
+
+    if (maps.isEmpty) {
+      print(maps);
+      return null;
+    }
+    print(maps);
+    return List.generate(
+        maps.length, (index) => Attendance.fromJson(maps[index]));
   }
-}
-// void _loadData() async {
-//   List<Item> items = await DatabaseHelper().getItems();
-//   setState(() {
-//     _items = items;
-//   });
-// }
+// static Future<List<Attendance>?> getTimeAttendance() async {
+//   final db = await _getDB();
+//   final List<Map<String, dynamic>> maps =
+//   await db.query("Attend_table", where: 'type =?', whereArgs: ['time']);
 //
-// void _deleteItem(int id) async {
-//   await DatabaseHelper().deleteItem(id);
-//   _loadData();
+//   if (maps.isEmpty) {
+//     // print(maps);
+//     return null;
+//   }
+//   // print(maps);
+//   return List.generate(maps.length, (index) => Attendance.fromJson(maps[index]));
 // }
+}

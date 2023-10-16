@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:one_klass/components/database.dart';
+
+// import 'package:one_klass/components/database.dart';
 import 'package:one_klass/components/databaseCache.dart';
 
 class InAppLocal extends StatefulWidget {
@@ -14,6 +15,7 @@ class InAppLocal extends StatefulWidget {
 class _InAppLocalState extends State<InAppLocal> {
   final GlobalKey webViewKey = GlobalKey();
   late InAppWebViewController webViewController;
+  Cache? item;
 
   PullToRefreshController? pullToRefreshController;
 
@@ -45,17 +47,17 @@ class _InAppLocalState extends State<InAppLocal> {
     }
   }
 
-  _loadData() async {
-    List<Item> items = await DatabaseHelper().getItems();
+  // _loadData() async {
+  //   List<Item> items = await DatabaseHelper().getItems();
+  //
+  //   return items;
+  // }
 
-    return items;
-  }
-
-  _loadCache() async {
-    List<Cache> cache = await DatabaseCache().getItems();
-
-    return cache;
-  }
+  // _loadCache() async {
+  //   List<Cache> cache = await DatabaseCache().getItems();
+  //
+  //   return cache;
+  // }
 
   @override
   void initState() {
@@ -91,33 +93,61 @@ class _InAppLocalState extends State<InAppLocal> {
                 onWebViewCreated: (controller) async {
                   webViewController = controller;
                   controller.addJavaScriptHandler(
-                    handlerName: 'writeUploadAbles',
-                    callback: (args) async {
-                      await DatabaseHelper.insertData(args[0], args[1]);
-                    },
-                  );
-                  controller.addJavaScriptHandler(
-                    handlerName: 'fetchUploadAbles',
-                    callback: (args) async {
-                      _loadData();
-                    },
-                  );
-                  controller.addJavaScriptHandler(
                     handlerName: 'writeCache',
                     callback: (args) async {
-                      await DatabaseCache.insertData(args[0], args[1]);
-                    },
-                  );
-                  controller.addJavaScriptHandler(
-                    handlerName: 'updateCache',
-                    callback: (args) async {
-                      await DatabaseCache.updateItem(args[0], args[1]);
+                      print(args);
+                      int r = 1;
+                      for (List a in args) {
+                        print(a);
+                        item = Cache(type: a[0], packet: a[1], id: r);
+
+                        bool take = await DatabaseCache.updateCache(
+                          item!,
+                        );
+                        if (take == false) {
+                          await DatabaseCache.addCache(item!);
+                        }
+                        r++;
+                      }
                     },
                   );
                   controller.addJavaScriptHandler(
                     handlerName: 'fetchCache',
                     callback: (args) async {
-                      _loadCache();
+                      print(args);
+                      List jet = [];
+                      for (String a in args) {
+                        List<Map<String, dynamic>>? geo =
+                        await DatabaseCache.getCache(a);
+
+                        jet.add(geo);
+                      }
+
+                      return jet;
+                      //  await _loadCache(b!);
+                    },
+                  );
+                  controller.addJavaScriptHandler(
+                    handlerName: 'deleteCache',
+                    callback: (args) async {
+                      print(args);
+
+                      for (String a in args) {
+                        await DatabaseCache.deleteCache(
+                            Cache(type: a, packet: a));
+                      }
+                    },
+                  );
+                  controller.addJavaScriptHandler(
+                    handlerName: 'fetchCache',
+                    callback: (args) async {
+                      // _loadCache();
+                      // callback: (args) async {
+                      //   for (List a in args) {
+                      //     b = a[0];
+                      //   }
+                      //   return (_loadCache(b!));
+                      // },
                     },
                   );
                 },

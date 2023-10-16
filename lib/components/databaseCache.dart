@@ -2,88 +2,101 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class Cache {
-  int id;
-  String type;
-  String packet;
+  final int? id;
+  final String type;
+  final String packet;
 
-  Cache({required this.id, required this.type, required this.packet});
+  const Cache({required this.type, required this.packet, this.id});
+
+  factory Cache.fromJson(Map<String, dynamic> json) =>
+      Cache(id: json['id'], type: json['type'], packet: json['packet']);
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type,
+        'packet': packet,
+      };
 }
 
 class DatabaseCache {
-  static Database? _cacheAbles;
+  static const int _version = 1;
+  static const String _dbname = 'Cache.db';
 
-  // Create and open the database.
-  static Future<Database> _openDatabase() async {
-    if (_cacheAbles == null) {
-      String dbPath = await getDatabasesPath();
-      String path = join(dbPath, 'my_database.db');
+  static Future<Database> _getDB() async {
+    return openDatabase(join(await getDatabasesPath(), _dbname),
+        onCreate: (db, version) async => await db.execute(
+              "CREATE TABLE A_table (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, packet TEXT NOT NULL)",
+            ),
+        version: _version);
+  }
 
-      _cacheAbles = await openDatabase(path, version: 1, onCreate: _onCreate);
+  static Future<int> addCache(Cache cache) async {
+    final db = await _getDB();
+    return await db.insert('A_table', cache.toJson(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  static Future<bool> updateCache(
+    Cache cache,
+  ) async {
+    final db = await _getDB();
+    bool hub;
+    int git = await db.update('A_table', cache.toJson(),
+        where: 'type=?',
+        whereArgs: [cache.type],
+        conflictAlgorithm: ConflictAlgorithm.replace);
+    if (git != 0) {
+      hub = true;
+    } else {
+      hub = false;
     }
-    return _cacheAbles!;
+    return hub;
   }
 
-  // Create the database table.
-  static Future<void> _onCreate(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE my_table (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT,
-        packet TEXT,
-      )
-    ''');
-  }
-
-  // Insert data into the database.
-  static Future<int> insertData(String type, String packet) async {
-    Database db = await _openDatabase();
-    Map<String, dynamic> row = {
-      'type': type,
-      'packet': packet,
-    };
-    return await db.insert('my_table', row);
-  }
-
-  Future<void> deleteItem(int id) async {
-    Database db = await _openDatabase();
-    await db.delete(
-      'my_table',
-      where: null,
+  static Future<int> deleteCache(Cache cache) async {
+    final db = await _getDB();
+    return await db.delete(
+      'A_table',
+      where: 'type=?',
+      whereArgs: [cache.type],
     );
   }
 
-  static Future<int> updateItem(String type, String packet) async {
-    Database db = await _openDatabase();
-    Map<String, dynamic> row = {
-      'type': type,
-      'packet': packet,
-    };
-    return await db.update('my_table', row);
+  static Future<List<Cache>?> getAllCache() async {
+    final db = await _getDB();
+    final List<Map<String, dynamic>> maps = await db.query('A_table');
+
+    if (maps.isEmpty) {
+      print(maps);
+      return null;
+    }
+    print(maps);
+    return List.generate(maps.length, (index) => Cache.fromJson(maps[index]));
   }
 
-  Future<List<Cache>> getItems() async {
-    Database db = await _openDatabase();
-    List<Map<String, dynamic>> items = await db.query('my_table');
-    return items
-        .map((item) =>
-            Cache(id: item['id'], type: item['type'], packet: item['packet']))
-        .toList();
+  static Future<List<Map<String, dynamic>>?> getCache(String request) async {
+    final db = await _getDB();
+    final List<Map<String, dynamic>> maps = await db.query("A_table",
+        columns: ['type', 'packet'], where: 'type =?', whereArgs: [request]);
+
+    if (maps.isEmpty) {
+      return null;
+    }
+
+    return maps;
+    // return List.generate(maps.length, (index) => Cache.fromJson(maps[index]));
   }
 
-  // Query all data from the database.
-  static Future<List<Map<String, dynamic>>> queryAllData() async {
-    Database db = await _openDatabase();
-    return await db.query('my_table');
+  static Future<List<Cache>?> getTimeCache() async {
+    final db = await _getDB();
+    final List<Map<String, dynamic>> maps = await db.query("A_table",
+        columns: ['type', 'packet'], where: 'type =?', whereArgs: ['time']);
+
+    if (maps.isEmpty) {
+      // print(maps);
+      return null;
+    }
+    // print(maps);
+    return List.generate(maps.length, (index) => Cache.fromJson(maps[index]));
   }
 }
-// void _loadData() async {
-//   List<Item> items = await DatabaseHelper().getItems();
-//   setState(() {
-//     _items = items;
-//   });
-// }
-//
-// void _deleteItem(int id) async {
-//   await DatabaseHelper().deleteItem(id);
-//   _loadData();
-// }

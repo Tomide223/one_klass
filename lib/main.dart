@@ -1,16 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'splashSreen.dart';
+import 'Screens/splashSreen.dart';
 import 'webScreen.dart';
 import 'localFile.dart';
-import 'popUp.dart';
+import 'Screens/popUp.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'dart:async';
 
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'inappwebviewstack.dart';
-import 'inpplocalfile.dart';
+import 'Screens/inappwebviewstack.dart';
+import 'Screens/inpplocalfile.dart';
+import 'Screens/queryCache.dart';
 
 final InAppLocalhostServer localhostServer = InAppLocalhostServer();
 
@@ -56,6 +57,7 @@ class MyApp extends StatelessWidget {
           'ad': (context) => const NoNetworkScreen(),
           'ar': (context) => MyInApp(),
           'arn': (context) => InAppLocal(),
+          'qc': (context) => const FirstTimer(),
         });
   }
 }

@@ -18,43 +18,31 @@ class _HomeScreenState extends State<HomeScreen> {
   late final WebViewController controllerA;
 
   String? connection;
-  ConnectivityResult _connectionStatus = ConnectivityResult.none;
+  ConnectivityResult? _connectionStatus;
   final Connectivity _connectivity = Connectivity();
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
-    controllerA = WebViewController(
-        // onPermissionRequest: (controller, request) async {
-        //   return PermissionResponse(
-        //       resources: request.resources,
-        //       action: PermissionResponseAction.GRANT);
-        // },
-        )
+
+    controllerA = WebViewController()
       ..loadFlutterAsset('assets/static/splash.html');
 
-    initConnectivity();
-    checkInternet();
+    // checkInternet();
 
     _connectivitySubscription =
         _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
 
-    Timer(const Duration(seconds: 7), () {
-      setState(() {
-        if (connection == 'connected') {
-          Navigator.pushNamed(context, 'ar');
-          // I am connected to a mobile network.
-        } else if (connection == 'not connected') {
-          Navigator.pushNamed(context, 'ad');
-        }
-      });
+    Timer(const Duration(seconds: 3), () {
+      initConnectivity();
     });
   }
 
   @override
   void dispose() {
     _connectivitySubscription.cancel();
+
     super.dispose();
   }
 
@@ -64,8 +52,32 @@ class _HomeScreenState extends State<HomeScreen> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       result = await _connectivity.checkConnectivity();
+      setState(() {
+        _connectionStatus = result;
+      });
+      if (_connectionStatus == ConnectivityResult.mobile ||
+          _connectionStatus == ConnectivityResult.wifi ||
+          _connectionStatus == ConnectivityResult.vpn) {
+        try {
+          final resultA = await InternetAddress.lookup('google.com');
+          if (resultA.isNotEmpty && resultA[0].rawAddress.isNotEmpty) {
+            setState(() {
+              connection = 'connected';
+              Navigator.pushNamed(context, 'ar');
+            });
+          }
+        } on SocketException catch (_) {
+          setState(() {
+            connection = 'not connected';
+            Navigator.pushNamed(context, 'ad');
+          });
+        }
+      } else {
+        connection = 'not connected';
+      }
     } on PlatformException catch (e) {
       developer.log('Couldn\'t check connectivity status', error: e);
+      connection = 'not connected';
       return;
     }
 
@@ -91,11 +103,13 @@ class _HomeScreenState extends State<HomeScreen> {
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
         setState(() {
           connection = 'connected';
+          print('yes');
         });
       }
     } on SocketException catch (_) {
       setState(() {
         connection = 'not connected';
+        print('iro');
       });
     }
   }
