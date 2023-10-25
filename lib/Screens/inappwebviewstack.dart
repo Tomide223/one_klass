@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
-
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -13,7 +13,7 @@ import 'package:one_klass/components/databaseCache.dart';
 
 class MyInApp extends StatefulWidget {
   @override
-  _MyInAppState createState() => new _MyInAppState();
+  _MyInAppState createState() => _MyInAppState();
 }
 
 class _MyInAppState extends State<MyInApp> {
@@ -80,19 +80,19 @@ class _MyInAppState extends State<MyInApp> {
     pullToRefreshController = kIsWeb
         ? null
         : PullToRefreshController(
-            options: PullToRefreshOptions(
-              color: Colors.blue,
-            ),
-            onRefresh: () async {
-              if (defaultTargetPlatform == TargetPlatform.android) {
-                webViewController.reload();
-              } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-                webViewController.loadUrl(
-                    urlRequest:
-                        URLRequest(url: await webViewController.getUrl()));
-              }
-            },
-          );
+      options: PullToRefreshOptions(
+        color: Colors.blue,
+      ),
+      onRefresh: () async {
+        if (defaultTargetPlatform == TargetPlatform.android) {
+          webViewController.reload();
+        } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+          webViewController.loadUrl(
+              urlRequest:
+              URLRequest(url: await webViewController.getUrl()));
+        }
+      },
+    );
   }
 
   @override
@@ -104,7 +104,7 @@ class _MyInAppState extends State<MyInApp> {
   @pragma('vm:entry-point')
   static void downloadCallback(String id, int status, int progress) {
     final SendPort? send =
-        IsolateNameServer.lookupPortByName('downloader_send_port');
+    IsolateNameServer.lookupPortByName('downloader_send_port');
     send!.send([id, status, progress]);
   }
 
@@ -112,18 +112,18 @@ class _MyInAppState extends State<MyInApp> {
     switch (item) {
       case 0:
         List<Map<String, dynamic>>? file =
-            await DatabaseCache.getCache('login');
+        await DatabaseCache.getCache('login');
         // await DatabaseCache.updateCache(
         //   items,
         // );
         print(file);
         break;
       case 1:
-        // await DatabaseCache.addCache(items);
-        //   await DatabaseCache.updateCache(
-        //     items,
-        //   );
-        await DatabaseCache.deleteCache(const Cache(type: 'type', packet: ''));
+      // await DatabaseCache.addCache(items);
+      //   await DatabaseCache.updateCache(
+      //     items,
+      //   );
+        await DatabaseCache.deleteCache(const Cache(type: 'time', packet: ''));
 
         break;
     }
@@ -135,20 +135,21 @@ class _MyInAppState extends State<MyInApp> {
       onWillPop: () => _goBack(),
       child: SafeArea(
         child: Scaffold(
-            appBar: AppBar(
-              title: const Text("InAppWebView Download"),
-              actions: [
-                PopupMenuButton<int>(
-                  onSelected: (item) => handleClick(item, 'login'),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem<int>(
-                        value: 0, child: Text('Download file 1')),
-                    const PopupMenuItem<int>(
-                        value: 1, child: Text('Download file 2')),
-                  ],
-                ),
-              ],
-            ),
+          // appBar: AppBar(
+          //   title: const Text("InAppWebView Download"),
+          //   actions: [
+          //     PopupMenuButton<int>(
+          //       onSelected: (item) => handleClick(item, 'login'),
+          //       itemBuilder: (context) =>
+          //       [
+          //         const PopupMenuItem<int>(
+          //             value: 0, child: Text('Download file 1')),
+          //         const PopupMenuItem<int>(
+          //             value: 1, child: Text('Download file 2')),
+          //       ],
+          //     ),
+          //   ],
+          // ),
             body: Stack(children: <Widget>[
               InAppWebView(
                 androidOnPermissionRequest: (InAppWebViewController controller,
@@ -162,6 +163,7 @@ class _MyInAppState extends State<MyInApp> {
                 },
                 initialOptions: InAppWebViewGroupOptions(
                   crossPlatform: InAppWebViewOptions(
+                      cacheEnabled: false,
                       mediaPlaybackRequiresUserGesture: false,
                       useOnDownloadStart: true,
                       javaScriptEnabled: true,
@@ -181,7 +183,7 @@ class _MyInAppState extends State<MyInApp> {
                     saveInPublicStorage: true,
                     // show download progress in status bar (for Android)
                     openFileFromNotification:
-                        true, // click on notification to open downloaded file (for Android)
+                    true, // click on notification to open downloaded file (for Android)
                   );
                 },
                 onLoadError: (controller, url, i, s) {
@@ -194,9 +196,8 @@ class _MyInAppState extends State<MyInApp> {
                 },
                 key: webViewKey,
                 initialUrlRequest:
-                    URLRequest(url: Uri.parse('http://192.168.43.172:8000/')),
-                // URLRequest(
-                //     url: Uri.parse('https://oneklass.oauife.edu.ng')),
+                // URLRequest(url: Uri.parse('http://192.168.43.172:8000/')),
+                URLRequest(url: Uri.parse('https://oneklass.oauife.edu.ng')),
                 pullToRefreshController: pullToRefreshController,
                 onWebViewCreated: (controller) {
                   webViewController = controller;
@@ -204,6 +205,24 @@ class _MyInAppState extends State<MyInApp> {
                     handlerName: 'clipboardManager',
                     callback: (args) {
                       return copy(args);
+                    },
+                  );
+                  controller.addJavaScriptHandler(
+                    handlerName: 'openExternal',
+                    callback: (args) async {
+                      print(args);
+                      for (String a in args) {
+                        if (await canLaunchUrl(Uri.parse(
+                            a))) {
+                          await launchUrl(Uri.parse(
+                              a));
+                        } else {
+                          const ScaffoldMessenger(
+                            child: Text('Unable to complete action, try again'),
+                          );
+                          throw 'Could not launch $a';
+                        }
+                      }
                     },
                   );
                   controller.addJavaScriptHandler(
@@ -232,7 +251,7 @@ class _MyInAppState extends State<MyInApp> {
                       List jet = [];
                       for (String a in args) {
                         List<Map<String, dynamic>>? geo =
-                            await DatabaseCache.getCache(a);
+                        await DatabaseCache.getCache(a);
 
                         jet.add(geo);
                       }
@@ -247,8 +266,28 @@ class _MyInAppState extends State<MyInApp> {
                       print(args);
 
                       for (String a in args) {
-                        await DatabaseCache.deleteCache(
-                            Cache(type: a, packet: a));
+                        await DatabaseCache.deleteCache(Cache(
+                            type: a, packet: a));
+                      }
+                    },
+                  );
+                  controller.addJavaScriptHandler(
+                    handlerName: 'handlePdf',
+                    callback: (args) async {
+                      print(args);
+                      Directory? tempDir = await getExternalStorageDirectory();
+
+                      for (String a in args) {
+                        await FlutterDownloader.enqueue(
+                          url: a,
+                          savedDir: tempDir!.path,
+                          showNotification: true,
+                          fileName: 'OneKlass',
+                          saveInPublicStorage: true,
+                          // show download progress in status bar (for Android)
+                          openFileFromNotification:
+                          true, // click on notification to open downloaded file (for Android)
+                        );
                       }
                     },
                   );

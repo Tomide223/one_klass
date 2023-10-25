@@ -47,7 +47,7 @@ dependencies:
   android_path_provider: ^0.3.0
   flutter_downloader: ^1.11.3
   path_provider: ^2.1.1
-  shelf_static: ^1.1.2
+  url_launcher: ^6.2.0
   path: ^1.8.3
   flutter_inappwebview: ^5.8.0
   sqflite: ^2.3.0

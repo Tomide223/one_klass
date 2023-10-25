@@ -112,8 +112,9 @@ class _NoNetworkScreenState extends State<NoNetworkScreen> {
                   title: 'Mark Attendance',
                   colour: Colors.blue,
                   onPressed: () async {
-                    List<Cache>? result = await DatabaseCache.getTimeCache();
-                    if (result!.isNotEmpty) {
+                    List<Cache> result = await DatabaseCache.getTimeCache();
+                    print(result);
+                    if (result.isNotEmpty) {
                       Navigator.pushNamed(context, 'arn');
                     } else if (result.isEmpty) {
                       Navigator.pushNamed(context, 'qc');

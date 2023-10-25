@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-// import 'package:one_klass/components/database.dart';
+
 import 'package:one_klass/components/databaseCache.dart';
 
 class InAppLocal extends StatefulWidget {
@@ -72,16 +72,14 @@ class _InAppLocalState extends State<InAppLocal> {
       onWillPop: () => _goBack(),
       child: SafeArea(
         child: Scaffold(
-          // appBar: AppBar(
-          //   backgroundColor: Colors.blueAccent,
-          //   title: const Text("Google"),
-          //   actions: [NavigationControls(controller:controller),],
-          // ),
+         
 
           body: Stack(
             children: [
               InAppWebView(
+
                 initialUrlRequest: URLRequest(
+
                     url: Uri.parse(
                         "http://localhost:8080/assets/static/takeattendance.html")),
                 androidOnPermissionRequest: (InAppWebViewController controller,
@@ -92,6 +90,7 @@ class _InAppLocalState extends State<InAppLocal> {
                 },
                 onWebViewCreated: (controller) async {
                   webViewController = controller;
+
                   controller.addJavaScriptHandler(
                     handlerName: 'writeCache',
                     callback: (args) async {
@@ -136,18 +135,6 @@ class _InAppLocalState extends State<InAppLocal> {
                         await DatabaseCache.deleteCache(
                             Cache(type: a, packet: a));
                       }
-                    },
-                  );
-                  controller.addJavaScriptHandler(
-                    handlerName: 'fetchCache',
-                    callback: (args) async {
-                      // _loadCache();
-                      // callback: (args) async {
-                      //   for (List a in args) {
-                      //     b = a[0];
-                      //   }
-                      //   return (_loadCache(b!));
-                      // },
                     },
                   );
                 },

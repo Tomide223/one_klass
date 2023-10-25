@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:one_klass/components/web_view_stack.dart';
+import 'package:one_klass/web_view_stack.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:io';
 import 'package:permission_handler/permission_handler.dart';

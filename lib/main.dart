@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'Screens/splashSreen.dart';
 import 'webScreen.dart';
-import 'localFile.dart';
+import 'logoScreen.dart';
 import 'Screens/popUp.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -21,8 +21,8 @@ Future<void> main() async {
       debug: false,
       // optional: set to false to disable printing logs to console (default: true)
       ignoreSsl:
-          true // option: set to false to disable working with http links (default: false)
-      );
+      true // option: set to false to disable working with http links (default: false)
+  );
 
   if (Platform.isAndroid) {
     await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
@@ -42,18 +42,18 @@ class MyApp extends StatelessWidget {
       DeviceOrientation.portraitDown,
     ]);
     return MaterialApp(
-        title: 'One Klass',
+        title: 'OneKlass',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
           useMaterial3: true,
         ),
-        initialRoute: 'a',
+        initialRoute: 'aaa',
         // home: const HomeScreen(),
 
         routes: {
           'a': (context) => const HomeScreen(),
           'aa': (context) => WebViewPage(),
-          'aaa': (context) => LocalViewPage(),
+          'aaa': (context) => const SplashScreen(),
           'ad': (context) => const NoNetworkScreen(),
           'ar': (context) => MyInApp(),
           'arn': (context) => InAppLocal(),

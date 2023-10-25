@@ -98,7 +98,7 @@ class _FirstTimerState extends State<FirstTimer> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text(
-                'Sorry, You need to connect to internet and log in',
+                'Sorry, You need to connect to internet and log in at the first time using the app.',
                 style: TextStyle(
                     fontSize: 23,
                     color: Colors.black,

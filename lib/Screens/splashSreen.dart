@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:one_klass/components/web_view_stack.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:developer' as developer;
 import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,7 +14,11 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late final WebViewController controllerA;
+  // This is deceleration of the variable
+  final GlobalKey webViewKey = GlobalKey();
+  late InAppWebViewController webViewController;
+
+  PullToRefreshController? pullToRefreshController;
 
   String? connection;
   ConnectivityResult? _connectionStatus;
@@ -26,15 +29,15 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
-    controllerA = WebViewController()
-      ..loadFlutterAsset('assets/static/splash.html');
+    // webViewController =InAppWebViewController()
+    //   ..loadFile(assetFilePath: 'assets/static/splash.html');
 
     // checkInternet();
 
     _connectivitySubscription =
         _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
-
-    Timer(const Duration(seconds: 3), () {
+    // This is to delay the navigation to the next screen
+    Timer(const Duration(seconds: 5), () {
       initConnectivity();
     });
   }
@@ -46,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
+  // Function that check internet connection and controls the navigation to the next screen
   Future<void> initConnectivity() async {
     late ConnectivityResult result;
     // Platform messages may fail, so we use a try/catch PlatformException.
@@ -65,6 +68,11 @@ class _HomeScreenState extends State<HomeScreen> {
               connection = 'connected';
               Navigator.pushNamed(context, 'ar');
             });
+          } else {
+            setState(() {
+              connection = 'not connected';
+              Navigator.pushNamed(context, 'ad');
+            });
           }
         } on SocketException catch (_) {
           setState(() {
@@ -73,11 +81,17 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         }
       } else {
-        connection = 'not connected';
+        setState(() {
+          connection = 'not connected';
+          Navigator.pushNamed(context, 'ad');
+        });
       }
     } on PlatformException catch (e) {
       developer.log('Couldn\'t check connectivity status', error: e);
-      connection = 'not connected';
+      setState(() {
+        connection = 'not connected';
+        Navigator.pushNamed(context, 'ad');
+      });
       return;
     }
 
@@ -85,7 +99,11 @@ class _HomeScreenState extends State<HomeScreen> {
     // message was in flight, we want to discard the reply rather than calling
     // setState to update our non-existent appearance.
     if (!mounted) {
-      return Future.value(null);
+      // return Future.value(null);
+      setState(() {
+        connection = 'not connected';
+        Navigator.pushNamed(context, 'ad');
+      });
     }
 
     return _updateConnectionStatus(result);
@@ -97,28 +115,19 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> checkInternet() async {
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        setState(() {
-          connection = 'connected';
-          print('yes');
-        });
-      }
-    } on SocketException catch (_) {
-      setState(() {
-        connection = 'not connected';
-        print('iro');
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: WebViewStack(
-      controller: controllerA,
-    ));
+      body: Stack(
+        children: [
+          InAppWebView(
+            onWebViewCreated: (controller) async {
+              webViewController = controller;
+              controller.loadFile(assetFilePath: 'assets/static/splash.html');
+            },
+          )
+        ],
+      ),
+    );
   }
 }

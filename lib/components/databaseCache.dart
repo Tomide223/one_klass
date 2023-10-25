@@ -87,15 +87,15 @@ class DatabaseCache {
     // return List.generate(maps.length, (index) => Cache.fromJson(maps[index]));
   }
 
-  static Future<List<Cache>?> getTimeCache() async {
+  static Future<List<Cache>> getTimeCache() async {
     final db = await _getDB();
     final List<Map<String, dynamic>> maps = await db.query("A_table",
         columns: ['type', 'packet'], where: 'type =?', whereArgs: ['time']);
 
-    if (maps.isEmpty) {
-      // print(maps);
-      return null;
-    }
+    // if (maps.isEmpty) {
+    //   // print(maps);
+    //   return null;
+    // }
     // print(maps);
     return List.generate(maps.length, (index) => Cache.fromJson(maps[index]));
   }
