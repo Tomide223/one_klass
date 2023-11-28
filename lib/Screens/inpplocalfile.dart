@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-
 import 'package:one_klass/components/databaseCache.dart';
 
 class InAppLocal extends StatefulWidget {
@@ -47,18 +46,6 @@ class _InAppLocalState extends State<InAppLocal> {
     }
   }
 
-  // _loadData() async {
-  //   List<Item> items = await DatabaseHelper().getItems();
-  //
-  //   return items;
-  // }
-
-  // _loadCache() async {
-  //   List<Cache> cache = await DatabaseCache().getItems();
-  //
-  //   return cache;
-  // }
-
   @override
   void initState() {
     // TODO: implement initState
@@ -72,14 +59,10 @@ class _InAppLocalState extends State<InAppLocal> {
       onWillPop: () => _goBack(),
       child: SafeArea(
         child: Scaffold(
-         
-
           body: Stack(
             children: [
               InAppWebView(
-
                 initialUrlRequest: URLRequest(
-
                     url: Uri.parse(
                         "http://localhost:8080/assets/static/takeattendance.html")),
                 androidOnPermissionRequest: (InAppWebViewController controller,
@@ -94,10 +77,8 @@ class _InAppLocalState extends State<InAppLocal> {
                   controller.addJavaScriptHandler(
                     handlerName: 'writeCache',
                     callback: (args) async {
-                      print(args);
-                      int r = 1;
+                      int r = 5;
                       for (List a in args) {
-                        print(a);
                         item = Cache(type: a[0], packet: a[1], id: r);
 
                         bool take = await DatabaseCache.updateCache(
@@ -113,11 +94,10 @@ class _InAppLocalState extends State<InAppLocal> {
                   controller.addJavaScriptHandler(
                     handlerName: 'fetchCache',
                     callback: (args) async {
-                      print(args);
                       List jet = [];
                       for (String a in args) {
                         List<Map<String, dynamic>>? geo =
-                        await DatabaseCache.getCache(a);
+                            await DatabaseCache.getCache(a);
 
                         jet.add(geo);
                       }
@@ -129,8 +109,6 @@ class _InAppLocalState extends State<InAppLocal> {
                   controller.addJavaScriptHandler(
                     handlerName: 'deleteCache',
                     callback: (args) async {
-                      print(args);
-
                       for (String a in args) {
                         await DatabaseCache.deleteCache(
                             Cache(type: a, packet: a));

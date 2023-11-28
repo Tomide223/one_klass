@@ -90,7 +90,7 @@ class _FirstTimerState extends State<FirstTimer> {
     return WillPopScope(
       onWillPop: () => exit(0),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF5F5F5),
         body: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(

@@ -28,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    initConnectivity();
 
     // webViewController =InAppWebViewController()
     //   ..loadFile(assetFilePath: 'assets/static/splash.html');
@@ -37,9 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _connectivitySubscription =
         _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
     // This is to delay the navigation to the next screen
-    Timer(const Duration(seconds: 5), () {
-      initConnectivity();
-    });
+    //   Timer(const Duration(seconds: 5), () {
+    //     initConnectivity();
+    //   });
   }
 
   @override
@@ -64,33 +65,43 @@ class _HomeScreenState extends State<HomeScreen> {
         try {
           final resultA = await InternetAddress.lookup('google.com');
           if (resultA.isNotEmpty && resultA[0].rawAddress.isNotEmpty) {
-            setState(() {
-              connection = 'connected';
-              Navigator.pushNamed(context, 'ar');
+            Timer(const Duration(seconds: 6), () {
+              setState(() {
+                connection = 'connected';
+                Navigator.pushNamed(context, 'ar');
+              });
             });
           } else {
+            Timer(const Duration(seconds: 6), () {
+              setState(() {
+                connection = 'not connected';
+                Navigator.pushNamed(context, 'ad');
+              });
+            });
+          }
+        } on SocketException catch (_) {
+          Timer(const Duration(seconds: 6), () {
             setState(() {
               connection = 'not connected';
               Navigator.pushNamed(context, 'ad');
             });
-          }
-        } on SocketException catch (_) {
+          });
+        }
+      } else {
+        Timer(const Duration(seconds: 6), () {
           setState(() {
             connection = 'not connected';
             Navigator.pushNamed(context, 'ad');
           });
-        }
-      } else {
-        setState(() {
-          connection = 'not connected';
-          Navigator.pushNamed(context, 'ad');
         });
       }
     } on PlatformException catch (e) {
       developer.log('Couldn\'t check connectivity status', error: e);
-      setState(() {
-        connection = 'not connected';
-        Navigator.pushNamed(context, 'ad');
+      Timer(const Duration(seconds: 6), () {
+        setState(() {
+          connection = 'not connected';
+          Navigator.pushNamed(context, 'ad');
+        });
       });
       return;
     }
@@ -100,9 +111,11 @@ class _HomeScreenState extends State<HomeScreen> {
     // setState to update our non-existent appearance.
     if (!mounted) {
       // return Future.value(null);
-      setState(() {
-        connection = 'not connected';
-        Navigator.pushNamed(context, 'ad');
+      Timer(const Duration(seconds: 6), () {
+        setState(() {
+          connection = 'not connected';
+          Navigator.pushNamed(context, 'ad');
+        });
       });
     }
 

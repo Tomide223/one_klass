@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'Screens/splashSreen.dart';
-import 'webScreen.dart';
-import 'logoScreen.dart';
+
+import 'Screens/logoScreen.dart';
 import 'Screens/popUp.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -21,8 +21,8 @@ Future<void> main() async {
       debug: false,
       // optional: set to false to disable printing logs to console (default: true)
       ignoreSsl:
-      true // option: set to false to disable working with http links (default: false)
-  );
+          true // option: set to false to disable working with http links (default: false)
+      );
 
   if (Platform.isAndroid) {
     await AndroidInAppWebViewController.setWebContentsDebuggingEnabled(true);
@@ -41,10 +41,18 @@ class MyApp extends StatelessWidget {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.dark
+        .copyWith(statusBarColor: const Color(0xFFF5F5F5)));
+    SystemChrome.setApplicationSwitcherDescription(
+        ApplicationSwitcherDescription(
+      label: 'OneKlass',
+      primaryColor: Colors.white.value,
+    ));
     return MaterialApp(
         title: 'OneKlass',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+          primaryIconTheme: const IconThemeData(color: Colors.white),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
           useMaterial3: true,
         ),
         initialRoute: 'aaa',
@@ -52,7 +60,6 @@ class MyApp extends StatelessWidget {
 
         routes: {
           'a': (context) => const HomeScreen(),
-          'aa': (context) => WebViewPage(),
           'aaa': (context) => const SplashScreen(),
           'ad': (context) => const NoNetworkScreen(),
           'ar': (context) => MyInApp(),

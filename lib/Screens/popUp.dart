@@ -20,6 +20,8 @@ class _NoNetworkScreenState extends State<NoNetworkScreen> {
   final Connectivity _connectivity = Connectivity();
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
+  // Cache items = const Cache(type: 'attendance', packet: 'yeppppp', id: 5);
+
   Future<void> checkInternet() async {
     try {
       final result = await InternetAddress.lookup('google.com');
@@ -30,6 +32,29 @@ class _NoNetworkScreenState extends State<NoNetworkScreen> {
       connection = 'not connected';
     }
   }
+
+  //
+  // void handleClick(int item, String request) async {
+  //   switch (item) {
+  //     case 0:
+  //       List<Map<String, dynamic>>? file =
+  //           await DatabaseCache.getCache('attendance');
+  //       // await DatabaseCache.updateCache(
+  //       //   items,
+  //       // );
+  //       print(file);
+  //       break;
+  //     case 1:
+  //       await DatabaseCache.addCache(items);
+  //       //   await DatabaseCache.updateCache(
+  //       //     items,
+  //       //   );
+  //       // await DatabaseCache.deleteCache(
+  //       //     const Cache(type: 'attendance', packet: ''));
+  //
+  //       break;
+  //   }
+  // }
 
   @override
   void initState() {
@@ -90,7 +115,22 @@ class _NoNetworkScreenState extends State<NoNetworkScreen> {
     return WillPopScope(
       onWillPop: () => exit(0),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        // appBar: AppBar(
+        //   title: const Text("InAppWebView Download"),
+        //   actions: [
+        //     PopupMenuButton<int>(
+        //       onSelected: (item) => handleClick(item, 'login'),
+        //       itemBuilder: (context) => [
+        //         const PopupMenuItem<int>(
+        //             value: 0, child: Text('Download file 1')),
+        //         const PopupMenuItem<int>(
+        //             value: 1, child: Text('Download file 2')),
+        //       ],
+        //     ),
+        //
+        //   ],
+        // ),
+        backgroundColor: const Color(0xFFF5F5F5),
         body: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -113,7 +153,7 @@ class _NoNetworkScreenState extends State<NoNetworkScreen> {
                   colour: Colors.blue,
                   onPressed: () async {
                     List<Cache> result = await DatabaseCache.getTimeCache();
-                    print(result);
+
                     if (result.isNotEmpty) {
                       Navigator.pushNamed(context, 'arn');
                     } else if (result.isEmpty) {
@@ -129,7 +169,7 @@ class _NoNetworkScreenState extends State<NoNetworkScreen> {
                       Navigator.pushNamed(context, 'ar');
                       // I am connected to a mobile network.
                     } else if (connection == 'not connected' &&
-                        result!.isNotEmpty) {
+                        result.isNotEmpty) {
                       Navigator.pushNamed(context, 'arn');
                     }
                   }),
